@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OkadaRide Admin — Secure Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a2a0a;min-height:100vh;font-family:'Nunito',sans-serif}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-thumb{background:#1B7A2F;border-radius:3px}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideInLeft{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore,collection,getDocs,doc,updateDoc,query,orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth,signInWithPopup,GoogleAuthProvider,signOut,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const firebaseConfig={
+  apiKey:"AIzaSyB5pXIFi1txKGJ6Xs9Rndfmu4enIuONGDk",
+  authDomain:"okadaride-a1ec9.firebaseapp.com",
+  projectId:"okadaride-a1ec9",
+  storageBucket:"okadaride-a1ec9.firebasestorage.app",
+  messagingSenderId:"152050146022",
+  appId:"1:152050146022:web:d3210fbd1a93c4e9813927",
+  measurementId:"G-ZC7GBND4QY"
+};
+
+const ADMIN_EMAIL="facenice107@gmail.com";
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+const auth=getAuth(app);
+const provider=new GoogleAuthProvider();
+
+window.adminLogin=async()=>{
+  try{
+    const result=await signInWithPopup(auth,provider);
+    if(result.user.email!==ADMIN_EMAIL){await signOut(auth);return{success:false,error:"Access denied. Only authorized OkadaRide admins can enter."};}
+    return{success:true,user:result.user};
+  }catch(e){return{success:false,error:e.message};}
+};
+window.adminLogout=async()=>await signOut(auth);
+window.listenAuth=(cb)=>onAuthStateChanged(auth,cb);
+window.fetchDrivers=async()=>{
+  try{
+    const q=query(collection(db,"driver_applications"),orderBy("submittedAt","desc"));
+    const snap=await getDocs(q);
+    return snap.docs.map(d=>({id:d.id,...d.data()}));
+  }catch(e){
+    try{const snap=await getDocs(collection(db,"driver_applications"));return snap.docs.map(d=>({id:d.id,...d.data()}));}
+    catch(e2){return[];}
+  }
+};
+window.fetchBookings=async()=>{
+  try{
+    const q=query(collection(db,"bookings"),orderBy("createdAt","desc"));
+    const snap=await getDocs(q);
+    return snap.docs.map(d=>({id:d.id,...d.data()}));
+  }catch(e){
+    try{const snap=await getDocs(collection(db,"bookings"));return snap.docs.map(d=>({id:d.id,...d.data()}));}
+    catch(e2){return[];}
+  }
+};
+window.updateDriverStatus=async(id,status)=>{
+  try{
+    await updateDoc(doc(db,"driver_applications",id),{status,reviewedAt:new Date().toISOString(),reviewedBy:ADMIN_EMAIL});
+    return{success:true};
+  }catch(e){return{success:false,error:e.message};}
+};
+console.log("✅ OkadaRide Admin Firebase ready");
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script type="text/babel">
+const {useState,useEffect,useCallback}=React;
+
+const C={
+  primary:"#1B7A2F",primaryLight:"#27AE45",primaryDark:"#0D4A1A",
+  red:"#CC0000",gold:"#FFB300",
+  bg:"#F2FAF3",text:"#0D2E14",textMid:"#3D6645",textLight:"#85A88C",
+  success:"#00C853",danger:"#CC0000",border:"rgba(27,122,47,.15)",
+  accentSoft:"rgba(27,122,47,.1)",
+};
+
+const isMobile=()=>window.innerWidth<768;
+
+const TukTuk=({size=32,color="#fff"})=>(
+  <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
+    <rect x="10" y="18" width="38" height="22" rx="5" fill={color} opacity="0.95"/>
+    <rect x="14" y="10" width="28" height="10" rx="4" fill={color} opacity="0.8"/>
+    <rect x="16" y="12" width="24" height="7" rx="2" fill="rgba(0,0,0,0.25)"/>
+    <rect x="36" y="22" width="9" height="14" rx="2" fill="rgba(0,0,0,0.2)"/>
+    <rect x="10" y="30" width="10" height="10" rx="2" fill={color} opacity="0.7"/>
+    <circle cx="13" cy="36" r="2.5" fill="#FFE082"/>
+    <circle cx="42" cy="42" r="7" fill="#1a1a1a" stroke={color} strokeWidth="2"/>
+    <circle cx="42" cy="42" r="3" fill="#555"/>
+    <circle cx="16" cy="42" r="5" fill="#1a1a1a" stroke={color} strokeWidth="2"/>
+    <circle cx="16" cy="42" r="2" fill="#555"/>
+    <circle cx="42" cy="42" r="5.5" fill="none" stroke="#FFB300" strokeWidth="1" strokeDasharray="3,4"/>
+    <circle cx="16" cy="42" r="3.5" fill="none" stroke="#FFB300" strokeWidth="1" strokeDasharray="2,3"/>
+  </svg>
+);
+
+const Spinner=({size=24,color=C.primary})=>(
+  <div style={{width:size,height:size,border:`3px solid rgba(0,0,0,.1)`,borderTop:`3px solid ${color}`,borderRadius:"50%",animation:"spin .8s linear infinite",flexShrink:0}}/>
+);
+
+const GhanaStripe=()=>(
+  <div style={{display:"flex",height:5,width:"100%"}}>
+    <div style={{flex:1,background:C.red}}/><div style={{flex:1,background:C.gold}}/><div style={{flex:1,background:C.primary}}/>
+  </div>
+);
+
+const StatusBadge=({status})=>{
+  const map={pending:{bg:"rgba(255,179,0,.15)",color:"#8B6000",label:"⏳ Pending"},approved:{bg:"rgba(0,200,83,.15)",color:"#006B2E",label:"✅ Approved"},rejected:{bg:"rgba(204,0,0,.12)",color:"#8B0000",label:"❌ Rejected"}};
+  const s=map[status]||map.pending;
+  return <span style={{background:s.bg,color:s.color,borderRadius:20,padding:"4px 12px",fontSize:12,fontWeight:800,display:"inline-block"}}>{s.label}</span>;
+};
+
+// ── LOGIN ─────────────────────────────────────────────────────────────────────
+function LoginScreen({onLogin}){
+  const [loading,setLoading]=useState(false);
+  const [error,setError]=useState("");
+  const handle=async()=>{
+    setLoading(true);setError("");
+    const wait=()=>new Promise(r=>setTimeout(r,400));
+    const tryLogin=async()=>{
+      if(window.adminLogin){
+        const res=await window.adminLogin();
+        if(res.success)onLogin(res.user);
+        else setError(res.error);
+        setLoading(false);
+      } else {await wait();await tryLogin();}
+    };
+    await tryLogin();
+  };
+  return(
+    <div style={{minHeight:"100vh",background:`linear-gradient(135deg,${C.primaryDark} 0%,#0a2a0a 60%,#1a1a0a 100%)`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:24,position:"relative"}}>
+      <div style={{position:"fixed",top:0,left:0,right:0,display:"flex",height:6,zIndex:10}}>
+        <div style={{flex:1,background:C.red}}/><div style={{flex:1,background:C.gold}}/><div style={{flex:1,background:"#006400"}}/>
+      </div>
+      <div style={{maxWidth:400,width:"100%",animation:"slideUp .5s ease"}}>
+        <div style={{textAlign:"center",marginBottom:28}}>
+          <div style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:76,height:76,background:`linear-gradient(135deg,${C.primaryLight},${C.primaryDark})`,borderRadius:22,marginBottom:14,boxShadow:`0 8px 28px rgba(27,122,47,.4)`}}>
+            <TukTuk size={44} color="#fff"/>
+          </div>
+          <h1 style={{fontFamily:"'Syne',sans-serif",fontSize:26,fontWeight:800,color:"#fff",marginBottom:4}}>OkadaRide Admin</h1>
+          <p style={{color:C.gold,fontSize:12,fontWeight:700,letterSpacing:.8}}>SECURE DASHBOARD · GHANA 🇬🇭</p>
+        </div>
+        <div style={{background:"rgba(255,255,255,.06)",backdropFilter:"blur(10px)",borderRadius:24,padding:28,border:"1px solid rgba(255,255,255,.1)"}}>
+          <div style={{textAlign:"center",marginBottom:20}}>
+            <div style={{fontSize:44,marginBottom:10}}>🔐</div>
+            <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:20,fontWeight:800,color:"#fff",marginBottom:6}}>Admin Access Only</h2>
+            <p style={{color:"rgba(255,255,255,.5)",fontSize:13,lineHeight:1.6}}>Restricted to authorized OkadaRide administrators only.</p>
+          </div>
+          <div style={{background:"rgba(255,179,0,.1)",border:"1px solid rgba(255,179,0,.25)",borderRadius:12,padding:"11px 14px",marginBottom:20,display:"flex",gap:9,alignItems:"flex-start"}}>
+            <span style={{fontSize:18,flexShrink:0}}>🛡️</span>
+            <div>
+              <p style={{fontWeight:800,color:C.gold,fontSize:12}}>Secured by Firebase Auth</p>
+              <p style={{color:"rgba(255,255,255,.45)",fontSize:11,marginTop:2,lineHeight:1.4}}>Only facenice107@gmail.com can access this dashboard.</p>
+            </div>
+          </div>
+          {error&&(
+            <div style={{background:"rgba(204,0,0,.15)",border:"1px solid rgba(204,0,0,.3)",borderRadius:12,padding:"11px 14px",marginBottom:14,display:"flex",gap:8}}>
+              <span style={{fontSize:16}}>⚠️</span>
+              <p style={{color:"#FF6B6B",fontSize:13,fontWeight:700}}>{error}</p>
+            </div>
+          )}
+          <button onClick={handle} disabled={loading} style={{width:"100%",padding:"15px",borderRadius:14,border:"none",background:loading?"rgba(255,255,255,.1)":`linear-gradient(135deg,#4285F4,#1565C0)`,color:"#fff",fontWeight:800,fontSize:15,cursor:loading?"not-allowed":"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10,boxShadow:loading?"none":"0 4px 18px rgba(66,133,244,.4)",fontFamily:"'Nunito',sans-serif"}}>
+            {loading?<React.Fragment><Spinner size={20} color="#fff"/> Signing in...</React.Fragment>:<React.Fragment><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="rgba(255,255,255,.8)" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="rgba(255,255,255,.6)" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="rgba(255,255,255,.9)" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Sign in with Google</React.Fragment>}
+          </button>
+          <p style={{textAlign:"center",color:"rgba(255,255,255,.25)",fontSize:11,marginTop:14}}>🔒 Unauthorized access is blocked and logged</p>
+        </div>
+        {/* Back to app button */}
+        <a href="https://frempah.github.io/okadaride-ghana" style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginTop:20,color:"rgba(255,255,255,.4)",fontSize:13,fontWeight:700,textDecoration:"none"}}>
+          ← Back to OkadaRide App
+        </a>
+      </div>
+    </div>
+  );
+}
+
+// ── STAT CARD ─────────────────────────────────────────────────────────────────
+function StatCard({icon,label,value,color,bg,sub}){
+  return(
+    <div style={{background:"#fff",borderRadius:18,padding:16,border:`1px solid ${C.border}`,boxShadow:"0 2px 12px rgba(27,122,47,.06)"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+        <div style={{width:40,height:40,borderRadius:12,background:bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{icon}</div>
+        <p style={{fontFamily:"'Syne',sans-serif",fontSize:26,fontWeight:800,color}}>{value}</p>
+      </div>
+      <p style={{fontWeight:800,fontSize:13,color:C.text}}>{label}</p>
+      {sub&&<p style={{color:C.textLight,fontSize:11,marginTop:2}}>{sub}</p>}
+    </div>
+  );
+}
+
+// ── DRIVER CARD ───────────────────────────────────────────────────────────────
+function DriverCard({driver,onApprove,onReject,updating}){
+  const [expanded,setExpanded]=useState(false);
+  const ts=driver.submittedAt?.seconds?new Date(driver.submittedAt.seconds*1000).toLocaleString():driver.submittedAt||"Unknown";
+  return(
+    <div style={{background:"#fff",borderRadius:18,border:`1px solid ${C.border}`,boxShadow:"0 2px 12px rgba(27,122,47,.06)",overflow:"hidden",marginBottom:12,animation:"slideUp .35s ease"}}>
+      <div style={{padding:"14px 16px",display:"flex",alignItems:"center",gap:12,cursor:"pointer"}} onClick={()=>setExpanded(e=>!e)}>
+        <div style={{width:44,height:44,borderRadius:"50%",background:`linear-gradient(135deg,${C.primaryLight},${C.primaryDark})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>🧑🏾</div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:3}}>
+            <p style={{fontWeight:800,fontSize:14,color:C.text}}>{driver.fullName||"Unknown"}</p>
+            <StatusBadge status={driver.status}/>
+          </div>
+          <p style={{color:C.textMid,fontSize:12}}>📞 {driver.phone} · 📍 {driver.region}</p>
+          <p style={{color:C.textLight,fontSize:11,marginTop:1}}>{ts}</p>
+        </div>
+        <span style={{color:C.textLight,fontSize:16,transform:expanded?"rotate(180deg)":"none",transition:"transform .3s",flexShrink:0}}>▾</span>
+      </div>
+      {expanded&&(
+        <div style={{padding:"0 16px 16px",borderTop:`1px solid ${C.border}`,animation:"fadeIn .3s ease"}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:12,marginBottom:12}}>
+            {[["🪪","Ghana Card",driver.ghanaCard],["🛺","Plate",driver.plate],["🎨","Colour",driver.tricycleColor],["📅","Year",driver.tricycleYear],["📍","Zone",driver.operatingZone],["💼","Occupation",driver.occupation],["📋","Licence No.",driver.licenceNumber],["📅","Licence Exp.",driver.licenceExpiry],["🚔","Police Report",driver.policeReport],["🆘","Emergency",driver.emergencyContactName],["📞","Emerg. Phone",driver.emergencyContactPhone],["🎂","Date of Birth",driver.dateOfBirth]].map(([icon,label,value])=>(
+              <div key={label} style={{background:C.bg,borderRadius:10,padding:"9px 11px"}}>
+                <p style={{color:C.textLight,fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>{icon} {label}</p>
+                <p style={{fontWeight:700,fontSize:12,color:C.text}}>{value||"Not provided"}</p>
+              </div>
+            ))}
+          </div>
+          {driver.status==="pending"&&(
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>onApprove(driver.id)} disabled={updating} style={{flex:1,padding:"12px",borderRadius:12,border:"none",background:updating?"#CBD5E0":`linear-gradient(135deg,${C.success},#006B2E)`,color:"#fff",fontWeight:800,fontSize:14,cursor:updating?"not-allowed":"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6,fontFamily:"'Nunito',sans-serif",boxShadow:`0 3px 12px rgba(0,200,83,.3)`}}>
+                {updating?<Spinner size={16} color="#fff"/>:"✅ Approve"}
+              </button>
+              <button onClick={()=>onReject(driver.id)} disabled={updating} style={{flex:1,padding:"12px",borderRadius:12,border:"none",background:updating?"#CBD5E0":`linear-gradient(135deg,${C.red},#8B0000)`,color:"#fff",fontWeight:800,fontSize:14,cursor:updating?"not-allowed":"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6,fontFamily:"'Nunito',sans-serif",boxShadow:`0 3px 12px rgba(204,0,0,.3)`}}>
+                {updating?<Spinner size={16} color="#fff"/>:"❌ Reject"}
+              </button>
+            </div>
+          )}
+          {driver.status==="approved"&&(
+            <div style={{background:"rgba(0,200,83,.08)",border:"1px solid rgba(0,200,83,.25)",borderRadius:11,padding:"10px 14px",textAlign:"center"}}>
+              <p style={{color:"#006B2E",fontWeight:800,fontSize:13}}>✅ Approved — driver is active on OkadaRide</p>
+            </div>
+          )}
+          {driver.status==="rejected"&&(
+            <div style={{background:"rgba(204,0,0,.06)",border:"1px solid rgba(204,0,0,.2)",borderRadius:11,padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+              <p style={{color:"#8B0000",fontWeight:800,fontSize:13}}>❌ Application rejected</p>
+              <button onClick={()=>onApprove(driver.id)} style={{padding:"6px 12px",borderRadius:9,border:"none",background:C.primary,color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'Nunito',sans-serif",whiteSpace:"nowrap"}}>Reconsider ↩</button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── BOOKING CARD ──────────────────────────────────────────────────────────────
+function BookingCard({booking}){
+  const ts=booking.createdAt?.seconds?new Date(booking.createdAt.seconds*1000).toLocaleString():booking.createdAt||"Unknown";
+  return(
+    <div style={{background:"#fff",borderRadius:16,border:`1px solid ${C.border}`,padding:"14px 16px",marginBottom:10,boxShadow:"0 2px 10px rgba(27,122,47,.06)",display:"flex",gap:12,alignItems:"center"}}>
+      <div style={{width:40,height:40,borderRadius:12,background:C.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+        <TukTuk size={24} color={C.primary}/>
+      </div>
+      <div style={{flex:1,minWidth:0}}>
+        <p style={{fontWeight:800,fontSize:13,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{booking.pickup} → {booking.dropoff}</p>
+        <p style={{color:C.textMid,fontSize:12,marginTop:2}}>🚗 {booking.driverName||"Unassigned"} · {booking.region}</p>
+        <p style={{color:C.textLight,fontSize:11,marginTop:1}}>{ts}</p>
+      </div>
+      <div style={{textAlign:"right",flexShrink:0}}>
+        <span style={{background:C.accentSoft,color:C.primary,borderRadius:20,padding:"3px 9px",fontSize:11,fontWeight:800,display:"block",marginBottom:3}}>{booking.paymentMethod==="cash"?"💵 Cash":"📱 MoMo"}</span>
+        <span style={{color:C.textLight,fontSize:10}}>{booking.status||"requested"}</span>
+      </div>
+    </div>
+  );
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+function Dashboard({user,onLogout}){
+  const [tab,setTab]=useState("overview");
+  const [drivers,setDrivers]=useState([]);
+  const [bookings,setBookings]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [updating,setUpdating]=useState(null);
+  const [filter,setFilter]=useState("all");
+  const [search,setSearch]=useState("");
+  const [sidebarOpen,setSidebarOpen]=useState(false);
+  const [toast,setToast]=useState(null);
+  const [mobile,setMobile]=useState(isMobile());
+
+  useEffect(()=>{
+    const onResize=()=>setMobile(isMobile());
+    window.addEventListener("resize",onResize);
+    return()=>window.removeEventListener("resize",onResize);
+  },[]);
+
+  const showToast=(msg,type="success")=>{setToast({msg,type});setTimeout(()=>setToast(null),3000);};
+
+  const loadData=useCallback(async()=>{
+    setLoading(true);
+    const [d,b]=await Promise.all([window.fetchDrivers?.()??[],window.fetchBookings?.()??[]]);
+    setDrivers(d);setBookings(b);setLoading(false);
+  },[]);
+
+  useEffect(()=>{loadData();},[loadData]);
+
+  const handleApprove=async(id)=>{
+    setUpdating(id);
+    const r=await window.updateDriverStatus(id,"approved");
+    if(r.success){setDrivers(ds=>ds.map(d=>d.id===id?{...d,status:"approved"}:d));showToast("Driver approved! ✅");}
+    else showToast("Failed to update. Try again.","error");
+    setUpdating(null);
+  };
+
+  const handleReject=async(id)=>{
+    setUpdating(id);
+    const r=await window.updateDriverStatus(id,"rejected");
+    if(r.success){setDrivers(ds=>ds.map(d=>d.id===id?{...d,status:"rejected"}:d));showToast("Application rejected ❌","error");}
+    else showToast("Failed to update. Try again.","error");
+    setUpdating(null);
+  };
+
+  const stats={
+    total:drivers.length,
+    pending:drivers.filter(d=>d.status==="pending").length,
+    approved:drivers.filter(d=>d.status==="approved").length,
+    rejected:drivers.filter(d=>d.status==="rejected").length,
+    bookings:bookings.length,
+    regions:[...new Set(drivers.map(d=>d.region).filter(Boolean))].length,
+  };
+
+  const filtered=drivers.filter(d=>{
+    const mf=filter==="all"||d.status===filter;
+    const ms=!search||d.fullName?.toLowerCase().includes(search.toLowerCase())||d.phone?.includes(search)||d.region?.toLowerCase().includes(search.toLowerCase())||d.plate?.toLowerCase().includes(search.toLowerCase());
+    return mf&&ms;
+  });
+
+  const navItems=[
+    {key:"overview",icon:"📊",label:"Overview"},
+    {key:"drivers",icon:"🧑🏾",label:"Driver Applications",badge:stats.pending},
+    {key:"bookings",icon:"🛺",label:"Bookings"},
+  ];
+
+  const goTab=(key)=>{setTab(key);setSidebarOpen(false);};
+
+  // ── SIDEBAR ─────────────────────────────────────────────────────────────────
+  const Sidebar=()=>(
+    <React.Fragment>
+      {/* Overlay */}
+      {mobile&&sidebarOpen&&(
+        <div onClick={()=>setSidebarOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.55)",zIndex:98,animation:"fadeIn .2s ease"}}/>
+      )}
+      {/* Sidebar panel */}
+      <div style={{
+        position:mobile?"fixed":"fixed",
+        left:0,top:0,bottom:0,
+        width:220,
+        background:`linear-gradient(180deg,${C.primaryDark},#0a2a0a)`,
+        padding:"20px 14px",
+        display:"flex",flexDirection:"column",
+        zIndex:99,
+        boxShadow:"4px 0 20px rgba(0,0,0,.4)",
+        transform:mobile?(sidebarOpen?"translateX(0)":"translateX(-100%)"):"translateX(0)",
+        transition:"transform .3s ease",
+      }}>
+        <GhanaStripe/>
+        {/* Logo */}
+        <div style={{textAlign:"center",padding:"16px 0 20px"}}>
+          <div style={{display:"flex",justifyContent:"center",marginBottom:8}}>
+            <TukTuk size={32} color="#fff"/>
+          </div>
+          <p style={{fontFamily:"'Syne',sans-serif",fontSize:15,fontWeight:800,color:"#fff"}}>OkadaRide</p>
+          <p style={{color:C.gold,fontSize:9,fontWeight:700,letterSpacing:.8}}>ADMIN DASHBOARD</p>
+        </div>
+
+        {/* Nav */}
+        {navItems.map(({key,icon,label,badge})=>(
+          <button key={key} onClick={()=>goTab(key)} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",borderRadius:12,border:"none",background:tab===key?"rgba(255,255,255,.15)":"transparent",color:tab===key?"#fff":"rgba(255,255,255,.5)",fontWeight:tab===key?800:600,fontSize:13,cursor:"pointer",marginBottom:4,textAlign:"left",width:"100%",fontFamily:"'Nunito',sans-serif",transition:"all .2s"}}>
+            <span style={{fontSize:17}}>{icon}</span>
+            <span style={{flex:1}}>{label}</span>
+            {badge>0&&<span style={{background:C.gold,color:"#000",borderRadius:"50%",width:19,height:19,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800,flexShrink:0}}>{badge}</span>}
+          </button>
+        ))}
+
+        <div style={{flex:1}}/>
+
+        {/* Back to app */}
+        <a href="https://frempah.github.io/okadaride-ghana" style={{display:"flex",alignItems:"center",gap:10,padding:"11px 14px",borderRadius:12,color:"rgba(255,255,255,.5)",fontWeight:700,fontSize:13,textDecoration:"none",marginBottom:8,transition:"all .2s"}}>
+          <span style={{fontSize:17}}>🏠</span> Back to App
+        </a>
+
+        {/* User */}
+        <div style={{background:"rgba(255,255,255,.07)",borderRadius:12,padding:"11px 12px",marginBottom:10}}>
+          <div style={{display:"flex",alignItems:"center",gap:9}}>
+            <img src={user.photoURL} alt="" style={{width:30,height:30,borderRadius:"50%",flexShrink:0}} onError={e=>e.target.style.display="none"}/>
+            <div style={{minWidth:0}}>
+              <p style={{color:"#fff",fontWeight:700,fontSize:11,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{user.displayName||"Admin"}</p>
+              <p style={{color:"rgba(255,255,255,.35)",fontSize:9,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{user.email}</p>
+            </div>
+          </div>
+        </div>
+        <button onClick={onLogout} style={{width:"100%",padding:"10px",borderRadius:11,border:"1px solid rgba(255,255,255,.15)",background:"transparent",color:"rgba(255,255,255,.55)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'Nunito',sans-serif"}}>🚪 Sign Out</button>
+      </div>
+    </React.Fragment>
+  );
+
+  // ── TOP BAR (mobile) ─────────────────────────────────────────────────────
+  const TopBar=()=>(
+    <div style={{position:"fixed",top:0,left:0,right:0,zIndex:97,background:`linear-gradient(135deg,${C.primaryDark},${C.primary})`,padding:"0 16px",height:56,display:"flex",alignItems:"center",justifyContent:"space-between",boxShadow:"0 2px 12px rgba(0,0,0,.2)"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        {mobile&&(
+          <button onClick={()=>setSidebarOpen(o=>!o)} style={{width:38,height:38,borderRadius:10,background:"rgba(255,255,255,.15)",border:"none",color:"#fff",fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Nunito',sans-serif"}}>
+            {sidebarOpen?"✕":"☰"}
+          </button>
+        )}
+        <TukTuk size={26} color="#fff"/>
+        <div>
+          <p style={{fontFamily:"'Syne',sans-serif",fontSize:14,fontWeight:800,color:"#fff",lineHeight:1}}>OkadaRide Admin</p>
+          <p style={{color:C.gold,fontSize:9,fontWeight:700}}>DASHBOARD 🇬🇭</p>
+        </div>
+      </div>
+      <div style={{display:"flex",alignItems:"center",gap:8}}>
+        {stats.pending>0&&(
+          <div style={{background:C.gold,borderRadius:20,padding:"4px 10px",display:"flex",alignItems:"center",gap:4}}>
+            <span style={{fontSize:11}}>⏳</span>
+            <span style={{color:"#000",fontWeight:800,fontSize:11}}>{stats.pending} pending</span>
+          </div>
+        )}
+        <button onClick={loadData} style={{width:34,height:34,borderRadius:9,background:"rgba(255,255,255,.15)",border:"none",color:"#fff",fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>🔄</button>
+      </div>
+    </div>
+  );
+
+  // ── BOTTOM NAV (mobile) ──────────────────────────────────────────────────
+  const BottomNav=()=>(
+    <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:97,background:"#fff",borderTop:`1px solid ${C.border}`,display:"flex",boxShadow:"0 -4px 16px rgba(27,122,47,.1)"}}>
+      {navItems.map(({key,icon,label,badge})=>(
+        <button key={key} onClick={()=>goTab(key)} style={{flex:1,padding:"10px 0 8px",border:"none",background:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,color:tab===key?C.primary:C.textLight,fontWeight:tab===key?800:600,fontSize:9,borderTop:tab===key?`3px solid ${C.primary}`:"3px solid transparent",transition:"all .2s",position:"relative",fontFamily:"'Nunito',sans-serif"}}>
+          <span style={{fontSize:20}}>{icon}</span>
+          <span>{label}</span>
+          {badge>0&&<span style={{position:"absolute",top:6,right:"50%",marginRight:-18,background:C.gold,color:"#000",borderRadius:"50%",width:16,height:16,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:800}}>{badge}</span>}
+        </button>
+      ))}
+      <button onClick={()=>window.location.href="https://frempah.github.io/okadaride-ghana"} style={{flex:1,padding:"10px 0 8px",border:"none",background:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,color:C.textLight,fontWeight:600,fontSize:9,borderTop:"3px solid transparent",fontFamily:"'Nunito',sans-serif"}}>
+        <span style={{fontSize:20}}>🏠</span>
+        <span>Main App</span>
+      </button>
+    </div>
+  );
+
+  const contentStyle={
+    marginLeft:mobile?0:220,
+    padding:mobile?"74px 14px 80px":"28px 24px",
+    minHeight:"100vh",
+    background:"#F0F4F0",
+  };
+
+  return(
+    <div>
+      {/* Ghana stripe */}
+      <div style={{position:"fixed",top:0,left:0,right:0,display:"flex",height:mobile?0:5,zIndex:100}}>
+        <div style={{flex:1,background:C.red}}/><div style={{flex:1,background:C.gold}}/><div style={{flex:1,background:"#006400"}}/>
+      </div>
+
+      {/* Toast */}
+      {toast&&(
+        <div style={{position:"fixed",top:mobile?66:20,right:12,zIndex:200,background:toast.type==="success"?C.success:C.danger,color:"#fff",borderRadius:12,padding:"11px 18px",fontWeight:800,fontSize:13,boxShadow:"0 8px 24px rgba(0,0,0,.2)",animation:"slideUp .3s ease",maxWidth:280}}>
+          {toast.msg}
+        </div>
+      )}
+
+      <Sidebar/>
+      {mobile&&<TopBar/>}
+
+      {/* Main content */}
+      <div style={contentStyle}>
+
+        {/* OVERVIEW */}
+        {tab==="overview"&&(
+          <div style={{animation:"slideUp .35s ease"}}>
+            <div style={{marginBottom:18}}>
+              <h1 style={{fontFamily:"'Syne',sans-serif",fontSize:mobile?20:24,fontWeight:800,color:C.text}}>Good day, {user.displayName?.split(" ")[0]||"Admin"}! 👋</h1>
+              <p style={{color:C.textMid,fontSize:13,marginTop:3}}>Here's what's happening with OkadaRide Ghana.</p>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
+              <StatCard icon="👥" label="Total Applications" value={stats.total} color={C.primary} bg="rgba(27,122,47,.1)" sub="Driver sign-ups"/>
+              <StatCard icon="⏳" label="Pending Review" value={stats.pending} color="#8B6000" bg="rgba(255,179,0,.12)" sub="Awaiting decision"/>
+              <StatCard icon="✅" label="Approved" value={stats.approved} color="#006B2E" bg="rgba(0,200,83,.1)" sub="Active drivers"/>
+              <StatCard icon="🛺" label="Bookings" value={stats.bookings} color="#1565C0" bg="rgba(21,101,192,.1)" sub="Ride requests"/>
+              <StatCard icon="❌" label="Rejected" value={stats.rejected} color="#8B0000" bg="rgba(204,0,0,.08)" sub="Declined"/>
+              <StatCard icon="🇬🇭" label="Regions" value={stats.regions} color="#6B0080" bg="rgba(107,0,128,.08)" sub="of 16 Ghana"/>
+            </div>
+
+            {stats.pending>0&&(
+              <div style={{background:"#fff",borderRadius:18,padding:16,border:`1px solid rgba(255,179,0,.3)`,boxShadow:"0 2px 12px rgba(27,122,47,.06)",marginBottom:16}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+                  <p style={{fontWeight:800,fontSize:15,color:C.text}}>⏳ Needs Review ({stats.pending})</p>
+                  <button onClick={()=>goTab("drivers")} style={{background:C.primary,color:"#fff",border:"none",borderRadius:9,padding:"7px 12px",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'Nunito',sans-serif"}}>View All →</button>
+                </div>
+                {drivers.filter(d=>d.status==="pending").slice(0,3).map(d=>(
+                  <div key={d.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:`1px solid ${C.border}`}}>
+                    <div style={{width:36,height:36,borderRadius:"50%",background:`linear-gradient(135deg,${C.primaryLight},${C.primaryDark})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>🧑🏾</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <p style={{fontWeight:800,color:C.text,fontSize:13,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{d.fullName}</p>
+                      <p style={{color:C.textMid,fontSize:11}}>{d.phone} · {d.region}</p>
+                    </div>
+                    <div style={{display:"flex",gap:6,flexShrink:0}}>
+                      <button onClick={()=>handleApprove(d.id)} disabled={updating===d.id} style={{padding:"6px 11px",borderRadius:8,border:"none",background:C.success,color:"#fff",fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"'Nunito',sans-serif"}}>✅</button>
+                      <button onClick={()=>handleReject(d.id)} disabled={updating===d.id} style={{padding:"6px 11px",borderRadius:8,border:"none",background:C.red,color:"#fff",fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"'Nunito',sans-serif"}}>❌</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {drivers.length>0&&(
+              <div style={{background:"#fff",borderRadius:18,padding:16,border:`1px solid ${C.border}`,boxShadow:"0 2px 12px rgba(27,122,47,.06)"}}>
+                <p style={{fontWeight:800,fontSize:15,color:C.text,marginBottom:14}}>🇬🇭 Applications by Region</p>
+                {Object.entries(drivers.reduce((acc,d)=>{const r=d.region||"Unknown";acc[r]=(acc[r]||0)+1;return acc;},{})).sort((a,b)=>b[1]-a[1]).map(([region,count])=>(
+                  <div key={region} style={{display:"flex",alignItems:"center",gap:10,marginBottom:9}}>
+                    <p style={{fontWeight:700,fontSize:12,color:C.text,width:130,flexShrink:0,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>📍 {region}</p>
+                    <div style={{flex:1,background:"#f0f4f0",borderRadius:6,height:9,overflow:"hidden"}}>
+                      <div style={{height:"100%",background:`linear-gradient(90deg,${C.primaryLight},${C.primaryDark})`,borderRadius:6,width:`${(count/drivers.length)*100}%`,transition:"width .5s ease"}}/>
+                    </div>
+                    <p style={{fontWeight:800,color:C.primary,fontSize:12,minWidth:16}}>{count}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            {loading&&<div style={{textAlign:"center",padding:40}}><Spinner size={36} color={C.primary}/><p style={{color:C.textMid,marginTop:10,fontWeight:700,fontSize:14}}>Loading...</p></div>}
+          </div>
+        )}
+
+        {/* DRIVERS */}
+        {tab==="drivers"&&(
+          <div style={{animation:"slideUp .35s ease"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:10}}>
+              <div>
+                <h1 style={{fontFamily:"'Syne',sans-serif",fontSize:mobile?18:22,fontWeight:800,color:C.text}}>Driver Applications</h1>
+                <p style={{color:C.textMid,fontSize:12,marginTop:3}}>{drivers.length} total · {stats.pending} pending</p>
+              </div>
+              <button onClick={loadData} style={{padding:"9px 14px",borderRadius:11,border:`1px solid ${C.border}`,background:"#fff",color:C.primary,fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'Nunito',sans-serif"}}>🔄 Refresh</button>
+            </div>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Search name, phone, region, plate..." style={{width:"100%",padding:"11px 14px",borderRadius:12,border:`1.5px solid ${C.border}`,fontSize:13,fontFamily:"'Nunito',sans-serif",outline:"none",background:"#fff",marginBottom:12}}/>
+            <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+              {["all","pending","approved","rejected"].map(f=>(
+                <button key={f} onClick={()=>setFilter(f)} style={{padding:"8px 12px",borderRadius:10,border:`1.5px solid ${filter===f?C.primary:C.border}`,background:filter===f?C.primary:"#fff",color:filter===f?"#fff":C.textMid,fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"'Nunito',sans-serif",textTransform:"capitalize"}}>
+                  {f==="all"?"All":f==="pending"?`⏳ Pending (${stats.pending})`:f==="approved"?`✅ Approved (${stats.approved})`:`❌ Rejected (${stats.rejected})`}
+                </button>
+              ))}
+            </div>
+            {loading?<div style={{textAlign:"center",padding:50}}><Spinner size={36} color={C.primary}/><p style={{color:C.textMid,marginTop:10,fontWeight:700,fontSize:14}}>Loading...</p></div>
+            :filtered.length===0?<div style={{background:"#fff",borderRadius:18,padding:36,textAlign:"center",border:`1px solid ${C.border}`}}><div style={{fontSize:44,marginBottom:10}}>📭</div><p style={{fontWeight:800,color:C.text}}>No applications found</p><p style={{color:C.textMid,marginTop:4,fontSize:13}}>{search?"Try a different search":"No applications in this category yet"}</p></div>
+            :filtered.map(d=><DriverCard key={d.id} driver={d} onApprove={handleApprove} onReject={handleReject} updating={updating===d.id}/>)}
+          </div>
+        )}
+
+        {/* BOOKINGS */}
+        {tab==="bookings"&&(
+          <div style={{animation:"slideUp .35s ease"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+              <div>
+                <h1 style={{fontFamily:"'Syne',sans-serif",fontSize:mobile?18:22,fontWeight:800,color:C.text}}>Bookings</h1>
+                <p style={{color:C.textMid,fontSize:12,marginTop:3}}>{bookings.length} total ride requests</p>
+              </div>
+              <button onClick={loadData} style={{padding:"9px 14px",borderRadius:11,border:`1px solid ${C.border}`,background:"#fff",color:C.primary,fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'Nunito',sans-serif"}}>🔄 Refresh</button>
+            </div>
+            {loading?<div style={{textAlign:"center",padding:50}}><Spinner size={36} color={C.primary}/><p style={{color:C.textMid,marginTop:10,fontWeight:700,fontSize:14}}>Loading...</p></div>
+            :bookings.length===0?<div style={{background:"#fff",borderRadius:18,padding:36,textAlign:"center",border:`1px solid ${C.border}`}}><div style={{display:"flex",justifyContent:"center",marginBottom:12}}><TukTuk size={48} color={C.primaryLight}/></div><p style={{fontWeight:800,color:C.text}}>No bookings yet</p><p style={{color:C.textMid,marginTop:4,fontSize:13}}>Bookings appear here when passengers book rides</p></div>
+            :bookings.map(b=><BookingCard key={b.id} booking={b}/>)}
+          </div>
+        )}
+      </div>
+
+      {mobile&&<BottomNav/>}
+    </div>
+  );
+}
+
+// ── APP ───────────────────────────────────────────────────────────────────────
+function App(){
+  const [user,setUser]=useState(null);
+  const [checking,setChecking]=useState(true);
+  useEffect(()=>{
+    const wait=()=>new Promise(r=>setTimeout(r,500));
+    const check=async()=>{
+      if(window.listenAuth){window.listenAuth(u=>{setUser(u);setChecking(false);});}
+      else{await wait();check();}
+    };
+    check();
+  },[]);
+  if(checking) return(
+    <div style={{minHeight:"100vh",background:`linear-gradient(135deg,${C.primaryDark},#0a2a0a)`,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:14}}>
+      <Spinner size={44} color={C.gold}/>
+      <p style={{color:"rgba(255,255,255,.5)",fontWeight:700,fontSize:14}}>Loading OkadaRide Admin...</p>
+    </div>
+  );
+  return user?<Dashboard user={user} onLogout={async()=>{await window.adminLogout?.();setUser(null);}}/>:<LoginScreen onLogin={setUser}/>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

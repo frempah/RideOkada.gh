@@ -1,0 +1,35 @@
+{
+  "name": "OkadaRide Ghana",
+  "short_name": "OkadaRide",
+  "description": "Ghana's Tricycle Ride App — Book a ride across all 16 regions",
+  "start_url": "/OakdaRide2.gh/",
+  "scope": "/OakdaRide2.gh/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0D4A1A",
+  "theme_color": "#1B7A2F",
+  "lang": "en",
+  "categories": ["travel", "transportation"],
+  "icons": [
+    { "src": "okada-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "okada-icon.svg", "sizes": "192x192", "type": "image/svg+xml" },
+    { "src": "okada-icon.svg", "sizes": "512x512", "type": "image/svg+xml" }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Book a Ride",
+      "short_name": "Book",
+      "description": "Book a tricycle ride now",
+      "url": "/OakdaRide2.gh/",
+      "icons": [{ "src": "okada-icon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Driver Portal",
+      "short_name": "Driver",
+      "description": "Driver login and ride management",
+      "url": "/OakdaRide2.gh/driver.html",
+      "icons": [{ "src": "okada-icon.svg", "sizes": "any" }]
+    }
+  ]
+}

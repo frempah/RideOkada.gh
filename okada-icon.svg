@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <clipPath id="circle">
+      <circle cx="256" cy="256" r="256"/>
+    </clipPath>
+  </defs>
+  
+  <!-- Background -->
+  <circle cx="256" cy="256" r="256" fill="#1B7A2F"/>
+  
+  <!-- Top Ghana stripe -->
+  <rect x="0" y="0" width="512" height="32" fill="#CC0000" clip-path="url(#circle)"/>
+  <rect x="0" y="32" width="512" height="32" fill="#FFB300" clip-path="url(#circle)"/>
+  <rect x="0" y="64" width="512" height="32" fill="#006400" clip-path="url(#circle)"/>
+
+  <!-- Big white tricycle centered -->
+  <!-- Body -->
+  <rect x="105" y="215" width="265" height="115" rx="24" fill="#fff"/>
+  <!-- Cabin -->
+  <rect x="138" y="152" width="175" height="68" rx="20" fill="#fff" opacity="0.92"/>
+  <!-- Windshield -->
+  <rect x="152" y="160" width="158" height="52" rx="12" fill="#27AE45" opacity="0.3"/>
+  <!-- Headlight -->
+  <circle cx="118" cy="262" r="15" fill="#FFE082"/>
+  <circle cx="118" cy="262" r="9" fill="#fff5"/>
+  <!-- Driver box -->
+  <rect x="330" y="222" width="34" height="74" rx="8" fill="#27AE45" opacity="0.2"/>
+
+  <!-- Back wheel -->
+  <circle cx="178" cy="358" r="50" fill="#0D2E14" clip-path="url(#circle)"/>
+  <circle cx="178" cy="358" r="35" fill="#2a2a2a" clip-path="url(#circle)"/>
+  <circle cx="178" cy="358" r="15" fill="#888" clip-path="url(#circle)"/>
+  <circle cx="178" cy="358" r="7" fill="#FFB300" clip-path="url(#circle)"/>
+  <line x1="178" y1="323" x2="178" y2="393" stroke="#555" stroke-width="3" clip-path="url(#circle)"/>
+  <line x1="143" y1="358" x2="213" y2="358" stroke="#555" stroke-width="3" clip-path="url(#circle)"/>
+  <line x1="153" y1="333" x2="203" y2="383" stroke="#555" stroke-width="3" clip-path="url(#circle)"/>
+  <line x1="203" y1="333" x2="153" y2="383" stroke="#555" stroke-width="3" clip-path="url(#circle)"/>
+
+  <!-- Front wheel -->
+  <circle cx="360" cy="358" r="50" fill="#0D2E14" clip-path="url(#circle)"/>
+  <circle cx="360" cy="358" r="35" fill="#2a2a2a" clip-path="url(#circle)"/>
+  <circle cx="360" cy="358" r="15" fill="#888" clip-path="url(#circle)"/>
+  <circle cx="360" cy="358" r="7" fill="#FFB300" clip-path="url(#circle)"/>
+  <line x1="360" y1="323" x2="360" y2="393" stroke="#555" stroke-width="3" clip-path="url(#circle)"/>
+  <line x1="325" y1="358" x2="395" y2="358" stroke="#555" stroke-width="3" clip-path="url(#circle)"/>
+  <line x1="335" y1="333" x2="385" y2="383" stroke="#555" stroke-width="3" clip-path="url(#circle)"/>
+  <line x1="385" y1="333" x2="335" y2="383" stroke="#555" stroke-width="3" clip-path="url(#circle)"/>
+
+  <!-- Bottom text band -->
+  <rect x="0" y="420" width="512" height="92" fill="#0D4A1A" clip-path="url(#circle)"/>
+  <text x="256" y="468" font-family="Arial Black,sans-serif" font-size="48" font-weight="900" fill="#fff" text-anchor="middle" letter-spacing="1">OkadaRide</text>
+</svg>
