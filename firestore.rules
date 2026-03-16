@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /passengers/{docId} {
+      allow create: if request.resource.data.keys().hasAll(['name','phone','pin','createdAt']);
+      allow read:   if true;
+      allow update: if true;
+      allow delete: if false;
+    }
+
+    match /bookings/{bookingId} {
+      allow create: if request.resource.data.keys().hasAll(['passengerPhone','pickup','dropoff','fare']);
+      allow read:   if true;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['status','acceptedAt','declinedAt','completedAt',
+                                 'driverName','driverPlate','driverPhone',
+                                 'drivingRating','communicationRating','ratingComment','rated']);
+      allow delete: if false;
+    }
+
+    match /bookings/{bookingId}/messages/{msgId} {
+      allow read, create: if true;
+      allow update, delete: if false;
+    }
+
+    match /driver_applications/{docId} {
+      allow read:   if true;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pin']);
+      allow create: if false;
+      allow delete: if false;
+    }
+
+    match /scheduled_bookings/{docId} {
+      allow create: if request.resource.data.keys().hasAll(['passengerPhone','pickup','dropoff']);
+      allow read:   if true;
+      allow update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
