@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+  <meta name="theme-color" content="#0D4A1A"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="description" content="Ghana's trusted tricycle ride app for Sunyani. Book fast, safe, affordable rides. GHS 30 flat rate."/>
+  <title>OkadaRide — Sunyani</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icon-192.png"/>
+
+  <!-- Maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Syne:wght@800;900&display=swap" rel="stylesheet"/>
+
+  <!-- App Styles -->
+  <link rel="stylesheet" href="css/app.css"/>
+</head>
+<body>
+
+<!-- Loading shell shown before React mounts -->
+<div id="root">
+  <div class="app-loading">
+    <div class="loading-trike">🛺</div>
+    <p class="loading-title">OkadaRide</p>
+    <p class="loading-sub">SUNYANI 🇬🇭</p>
+    <div class="loading-dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- External Libraries -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+
+<!-- OkadaRide Application -->
+<script src="js/config.js"></script>
+<script src="js/security.js"></script>
+<script src="js/database.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/components.js"></script>
+<script src="js/screen-splash.js"></script>
+<script src="js/screen-register.js"></script>
+<script src="js/screen-riderapply.js"></script>
+<script src="js/screen-mappicker.js"></script>
+<script src="js/screen-login.js"></script>
+<script src="js/screen-home.js"></script>
+<script src="js/screen-bookride.js"></script>
+<script src="js/screen-profile.js"></script>
+<script src="js/screen-riderdash.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
