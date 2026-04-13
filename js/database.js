@@ -1,18 +1,10 @@
 /* ═══════════════════════════════════════════
-   OkadaRide — Firebase Config & Constants
-   ⚠️  In production: move API keys to env vars
+   OkadaRide — Database Layer (Firebase)
+   All Firestore operations go here.
+   Never call firebase.firestore() directly
+   from components — always use DB.*
    ═══════════════════════════════════════════ */
 'use strict';
-
-firebase.initializeApp({
-  apiKey:"AIzaSyB5pXIFi1txKGJ6Xs9Rndfmu4enIuONGDk",
-  authDomain:"okadaride-a1ec9.firebaseapp.com",
-  projectId:"okadaride-a1ec9",
-  storageBucket:"okadaride-a1ec9.firebasestorage.app",
-  messagingSenderId:"152050146022",
-  appId:"1:152050146022:web:d3210fbd1a93c4e9813927"
-});
-var db = firebase.firestore();
 
 var DB = {
   savePassenger: async function(d){
