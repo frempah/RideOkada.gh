@@ -1,1 +1,81 @@
+/* ═══════════════════════════════════════════
+   OkadaRide Ghana — Main Stylesheet
+   Version 2.0 · 2026
+   ═══════════════════════════════════════════ */
 
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+html,body{height:100%;overflow:hidden;background:#061a0a}
+::-webkit-scrollbar{width:0;height:0}
+::selection{background:rgba(27,122,47,.25)}
+body{font-family:'Nunito',sans-serif;display:flex;justify-content:center;position:fixed;width:100%;top:0;left:0}
+#root{width:100%;max-width:430px;height:100dvh;background:#F0F7F1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:none}
+input,select,button,textarea{font-family:'Nunito',sans-serif;outline:none;-webkit-appearance:none}
+input,select,textarea{font-size:16px!important}
+button{cursor:pointer;border:none}
+::-webkit-scrollbar{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(32px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideBack{from{opacity:0;transform:translateX(-32px)}to{opacity:1;transform:translateX(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes popIn{0%{opacity:0;transform:scale(.94)}100%{opacity:1;transform:scale(1)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.page{animation:rise .32s cubic-bezier(.22,.61,.36,1) both}
+.slide-in{animation:slideIn .3s cubic-bezier(.22,.61,.36,1) both}
+.slide-back{animation:slideBack .3s cubic-bezier(.22,.61,.36,1) both}
+.pop-in{animation:popIn .28s cubic-bezier(.34,1.56,.64,1) both}
+.fade-up{animation:fadeUp .25s ease both}
+/* Smooth all interactive elements */
+button,a{transition:transform .12s,opacity .15s,background .2s,box-shadow .2s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button:active{transform:scale(.96)!important;opacity:.85}
+input,select,textarea{transition:border-color .2s,background .2s,box-shadow .2s;font-family:inherit}
+input:focus,select:focus{box-shadow:0 0 0 3px rgba(27,122,47,.18)!important;outline:none}
+img{max-width:100%;display:block}
+/* Card hover/tap feel */
+.tap-card{transition:transform .15s,box-shadow .15s}
+.tap-card:active{transform:scale(.98);box-shadow:0 1px 6px rgba(0,0,0,.08)!important}
+
+/* ── Loading Screen ──────────────────────────── */
+.app-loading {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #0D4A1A, #1B7A2F);
+  gap: 8px;
+}
+.loading-trike {
+  font-size: 54px;
+  margin-bottom: 8px;
+  animation: float 2s ease-in-out infinite;
+}
+.loading-title {
+  color: #fff;
+  font-family: 'Syne', sans-serif;
+  font-weight: 900;
+  font-size: 28px;
+}
+.loading-sub {
+  color: #FFB300;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  margin-top: 4px;
+}
+.loading-dots {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #FFB300;
+}
+.dot:nth-child(1) { animation: pulse 1s 0s infinite; }
+.dot:nth-child(2) { animation: pulse 1s .22s infinite; }
+.dot:nth-child(3) { animation: pulse 1s .44s infinite; }
