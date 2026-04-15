@@ -1,1 +1,8 @@
-
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "io.github.frempah.twa",
+    "sha256_cert_fingerprints": ["FB:64:09:6E:67:41:31:9B:9C:90:68:C9:4F:5A:74:D0:10:FE:42:B4"]
+  }
+}]
