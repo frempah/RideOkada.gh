@@ -872,21 +872,33 @@ var OkadaAI = {
 
   // ── Core API caller ────────────────────────────────────────────────────────
   // All AI calls go through here — handles errors and loading states
+  // ── Gemini API key — AIzaSyCzbYaEyLkNicIj3qSnrZrHRBK7T09s0nM with your real key
+  GEMINI_KEY: "AIzaSyCzbYaEyLkNicIj3qSnrZrHRBK7T09s0nM",
+
   ask: async function(systemPrompt, userMessage, maxTokens){
     try{
-      var response = await fetch("https://api.anthropic.com/v1/messages",{
+      var url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="+this.GEMINI_KEY;
+      var response = await fetch(url,{
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: maxTokens || 300,
-          system: systemPrompt,
-          messages:[{role:"user", content: userMessage}]
+          contents:[{
+            parts:[{
+              text: systemPrompt + "\n\nUser: " + userMessage
+            }]
+          }],
+          generationConfig:{
+            maxOutputTokens: maxTokens || 300,
+            temperature: 0.7
+          }
         })
       });
       var data = await response.json();
-      if(data.content && data.content[0]){
-        return data.content[0].text;
+      if(data.candidates && data.candidates[0] &&
+         data.candidates[0].content &&
+         data.candidates[0].content.parts &&
+         data.candidates[0].content.parts[0]){
+        return data.candidates[0].content.parts[0].text;
       }
       return null;
     }catch(e){
